@@ -1,10 +1,25 @@
 import faultTree from '../data/fault-tree.json';
+import { FLEET_DATABASE } from './fleetData';
 
-export const STORAGE_KEY = 'relatorio_turno_ahs_draft_v1';
+export const STORAGE_KEY = 'relatorio_turno_mec_draft_v1';
 
 export const codes = ['HMC – 9200', 'MPS – 9600', 'MPNS – 9100', 'HAC – 9700'];
 
 export const statuses = ['Liberado', 'Em manutenção'];
+
+export const mpsPreventiveTypes = [
+  '250 H',
+  '500 H',
+  '1000 H',
+  '2000 H',
+  '4000 H',
+  '6000 H',
+  '8000 H',
+  'PREV PNEUS',
+  'INSP SENSIT',
+  'INSP PRED',
+  'INSP PNEUS',
+];
 
 export const teams = ['A', 'B', 'C', 'D', 'ADM'];
 
@@ -13,11 +28,10 @@ export const stoppedPreInfo = [
   'ELETRICA',
   'BORRACHARIA',
   'LUBRIFICACAO',
-  'ON BRD AUTOMACAO AHS',
-  'CALIBRAÇÃO AHS',
-  'ON BRD TELECOM',
-  'OFF BRD TELECOM/REDES',
   'PREVENTIVA OFICINA',
+  'SOLDA / CALDEIRARIA',
+  'LAVADOR',
+  'ABASTECIMENTO',
 ];
 
 export const delayJustifications = [
@@ -72,32 +86,8 @@ export const delayJustifications = [
 
 export const systems = Object.keys(faultTree);
 
-export const fleetEquipments = [
-  'CA5516',
-  'CA5522',
-  'CA5525',
-  'CA5527',
-  'CA5528',
-  'CA5529',
-  'CA5530',
-  'CA5531',
-  'CA5532',
-  'CA5533',
-  'CA5534',
-  'CA5536',
-  'CA5704',
-  'CA5706',
-  'CA5710',
-  'CA5711',
-  'CA5714',
-  'CA5716',
-  'CA5718',
-  'CA5719',
-  'CA5722',
-  'CA5724',
-  'CA5725',
-  'CA5726',
-];
+// Frota completa com todos os 70 ativos catalogados (CM55xx, CM40xx, CT56xx, RB79xx)
+export const fleetEquipments = FLEET_DATABASE.map((item) => item.fullTag);
 
 export const emoji = {
   clipboard: '📋',

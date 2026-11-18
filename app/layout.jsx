@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Relatório de manutenção corretiva',
-  description: 'Relatório de turno de manutenção corretiva.',
+  title: 'Relatório de Turno – Manutenção Mecânica | Sotreq CAT',
+  description: 'Relatório de turno de manutenção mecânica convencional para caminhões e frotas de mina.',
 };
 
 export const viewport = {

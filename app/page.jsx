@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import faultTree from '../src/data/fault-tree.json';
-import { STORAGE_KEY, codes, fleetEquipments } from '../src/constants';
-import { formatCA, getFleetSummary } from '../src/utils/formatters';
+import { STORAGE_KEY, codes } from '../src/constants';
+import { formatAsset } from '../src/utils/formatters';
 import { generateWhatsAppReport } from '../src/utils/reportGenerator';
 import { downloadCsv } from '../src/utils/exportCsv';
 
@@ -11,10 +11,9 @@ import Field from '../src/components/common/Field';
 import ShiftDataSection from '../src/components/sections/ShiftDataSection';
 import AppointmentsSection from '../src/components/sections/AppointmentsSection';
 import StoppedSection from '../src/components/sections/StoppedSection';
-import OperatingSection from '../src/components/sections/OperatingSection';
-import FleetSummarySection from '../src/components/sections/FleetSummarySection';
 import WhatsAppPreview from '../src/components/preview/WhatsAppPreview';
 import PdfReportModal from '../src/components/modal/PdfReportModal';
+import SerialSearchModal from '../src/components/modal/SerialSearchModal';
 
 export default function Page() {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -36,29 +35,8 @@ export default function Page() {
   ]);
   const [report, setReport] = useState('');
   const [showPdfModal, setShowPdfModal] = useState(false);
+  const [showSerialModal, setShowSerialModal] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-
-  // Caminhões em manutenção (parados ou com atendimento não liberado)
-  const maintTrucks = new Set([
-    ...stopped
-      .map((item) => formatCA(item.asset))
-      .filter((tag) => tag.length > 2),
-    ...appointments
-      .filter((a) => {
-        const eff =
-          a.endTime && a.endTime.trim() && a.status === 'Aguardando recurso'
-            ? 'Liberado'
-            : a.status || 'Em manutenção';
-        return eff !== 'Liberado';
-      })
-      .map((a) => formatCA(a.asset))
-      .filter((tag) => tag.length > 2),
-  ]);
-
-  // Frota operando autônomo calculada dinamicamente: todos os 23 caminhões exceto quem está em manutenção
-  const operating = fleetEquipments
-    .filter((asset) => !maintTrucks.has(asset))
-    .map((asset) => ({ asset }));
 
   // Carrega rascunho persistido ao abrir ou recarregar a página
   useEffect(() => {
@@ -176,7 +154,6 @@ export default function Page() {
         conclusion,
         appointments,
         stopped,
-        operating,
         report,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
@@ -193,7 +170,6 @@ export default function Page() {
     conclusion,
     appointments,
     stopped,
-    operating,
     report,
     isLoaded,
   ]);
@@ -209,8 +185,6 @@ export default function Page() {
     ? new Intl.DateTimeFormat('pt-BR').format(new Date(`${date}T12:00:00`))
     : '-';
 
-  const fleetSummary = getFleetSummary(stopped, operating, appointments);
-
   const makeReport = () => {
     return generateWhatsAppReport({
       dateText,
@@ -222,7 +196,6 @@ export default function Page() {
       conclusion,
       appointments,
       stopped,
-      operating,
     });
   };
 
@@ -234,7 +207,6 @@ export default function Page() {
   }, [
     appointments,
     stopped,
-    operating,
     date,
     shift,
     team,
@@ -294,10 +266,10 @@ export default function Page() {
     <main className="page">
       <header className="hero">
         <div>
-          <p className="eyebrow">Manutenção corretiva</p>
+          <p className="eyebrow">Manutenção Mecânica Convencional</p>
           <h1>Relatório de Turno</h1>
           <p className="subtitle">
-            Preencha os atendimentos e gere WhatsApp ou ficha PDF.
+            Preencha os atendimentos mecânicos e gere WhatsApp ou ficha PDF.
           </p>
         </div>
         <div className="brand-container">
@@ -346,15 +318,18 @@ export default function Page() {
 
         <StoppedSection stopped={stopped} setStopped={setStopped} />
 
-        <OperatingSection operating={operating} />
-
-        <FleetSummarySection fleetSummary={fleetSummary} />
-
         <div className="actions">
           <span className="auto-save-pill">💾 Rascunho salvo</span>
           <div className="btn-group">
             <button type="button" className="secondary" onClick={handleClear}>
               Limpar
+            </button>
+            <button
+              type="button"
+              className="outline"
+              onClick={() => setShowSerialModal(true)}
+            >
+              🔍 Consultar Série
             </button>
             <button
               type="button"
@@ -397,8 +372,12 @@ export default function Page() {
         conclusion={conclusion}
         appointments={appointments}
         stopped={stopped}
-        operating={operating}
-        fleetSummary={fleetSummary}
+      />
+
+      {/* Modal de Consulta de Número de Série pela TAG */}
+      <SerialSearchModal
+        isOpen={showSerialModal}
+        onClose={() => setShowSerialModal(false)}
       />
     </main>
   );

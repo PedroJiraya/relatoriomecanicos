@@ -28,19 +28,35 @@ export function formatDateTimeWhatsApp(val = '') {
   return val;
 }
 
-export function formatCA(val = '') {
+export function formatAsset(val = '') {
   if (!val) return '';
   const clean = val.trim().toUpperCase().replace(/\s+/g, '');
   if (!clean) return '';
-  const digitsOrSuffix = clean.replace(/^(CA|CM)+/i, '');
-  return digitsOrSuffix ? `CA${digitsOrSuffix}` : 'CA';
+
+  const match = clean.match(/^(CM|CT|RB|CA)?(\d+.*)$/i);
+  if (match) {
+    const explicitPrefix = match[1]?.toUpperCase();
+    const digits = match[2];
+
+    if (!explicitPrefix || explicitPrefix === 'CA') {
+      if (digits.startsWith('55')) return `CM${digits}`;
+      if (digits.startsWith('40')) return `CM${digits}`;
+      if (digits.startsWith('56')) return `CT${digits}`;
+      if (digits.startsWith('79')) return `RB${digits}`;
+      return `CM${digits}`;
+    }
+    return `${explicitPrefix}${digits}`;
+  }
+
+  return clean;
 }
 
-export const formatCM = formatCA;
+export const formatCA = formatAsset;
+export const formatCM = formatAsset;
 
 export function getTag(asset = '') {
   return String(asset || '')
-    .replace(/^(CA|CM)+/i, '')
+    .replace(/^(CM|CT|RB|CA)+/i, '')
     .trim();
 }
 
@@ -62,19 +78,19 @@ export function getDelayTimes(delays = [], dIdx = 0, itemStartTime = '') {
 
 export function normalizeAssetInput(raw, prev = '') {
   let val = raw.toUpperCase().replace(/\s+/g, '');
-  if ((val === 'CA' || val === 'CM') && prev.length > 2) {
+  if (/^(CM|CT|RB|CA)$/i.test(val) && prev.length > 2) {
     return '';
   }
-  if (/^\d/.test(val)) {
-    val = `CA${val}`;
-  }
-  return val;
+  return formatAsset(val);
 }
 
 export function getTruckModel(asset = '') {
-  const clean = formatCA(asset).toUpperCase();
-  if (/^CA55|^CM55|^55/.test(clean)) return '797F';
-  if (/^CA57|^CM57|^57/.test(clean)) return '794 AC';
+  const clean = formatAsset(asset).toUpperCase();
+  const digits = clean.replace(/^[A-Z]+/i, '');
+  if (digits.startsWith('55')) return '797F';
+  if (digits.startsWith('40')) return '793D';
+  if (digits.startsWith('56')) return 'Pipa';
+  if (digits.startsWith('79')) return 'Rebocador';
   return 'Outros';
 }
 
@@ -87,19 +103,19 @@ export function getFleetSummary(stopped = [], operating = [], appointments = [])
           : a.status || 'Em manutenção';
       return eff !== 'Liberado';
     })
-    .map((a) => formatCA(a.asset))
+    .map((a) => formatAsset(a.asset))
     .filter((tag) => tag.length > 2);
 
   const maintList = [
     ...stopped
-      .map((item) => formatCA(item.asset))
+      .map((item) => formatAsset(item.asset))
       .filter((tag) => tag.length > 2),
     ...maintFromAppointments,
   ];
   const uniqueMaint = Array.from(new Set(maintList));
 
   const autoList = operating
-    .map((item) => formatCA(item.asset))
+    .map((item) => formatAsset(item.asset))
     .filter((tag) => tag.length > 2);
   const uniqueAuto = Array.from(new Set(autoList));
 
@@ -116,13 +132,29 @@ export function getFleetSummary(stopped = [], operating = [], appointments = [])
   ).length;
   const total797F = count797F_Maint + count797F_Auto;
 
-  const count794AC_Maint = uniqueMaint.filter(
-    (t) => getTruckModel(t) === '794 AC',
+  const count793D_Maint = uniqueMaint.filter(
+    (t) => getTruckModel(t) === '793D',
   ).length;
-  const count794AC_Auto = uniqueAuto.filter(
-    (t) => getTruckModel(t) === '794 AC',
+  const count793D_Auto = uniqueAuto.filter(
+    (t) => getTruckModel(t) === '793D',
   ).length;
-  const total794AC = count794AC_Maint + count794AC_Auto;
+  const total793D = count793D_Maint + count793D_Auto;
+
+  const countPipa_Maint = uniqueMaint.filter(
+    (t) => getTruckModel(t) === 'Pipa',
+  ).length;
+  const countPipa_Auto = uniqueAuto.filter(
+    (t) => getTruckModel(t) === 'Pipa',
+  ).length;
+  const totalPipa = countPipa_Maint + countPipa_Auto;
+
+  const countRebocador_Maint = uniqueMaint.filter(
+    (t) => getTruckModel(t) === 'Rebocador',
+  ).length;
+  const countRebocador_Auto = uniqueAuto.filter(
+    (t) => getTruckModel(t) === 'Rebocador',
+  ).length;
+  const totalRebocador = countRebocador_Maint + countRebocador_Auto;
 
   const calc = (count, tot) => {
     if (!tot || tot === 0) return { num: 0, text: '0%' };
@@ -137,8 +169,14 @@ export function getFleetSummary(stopped = [], operating = [], appointments = [])
   const f797AutoCalc = calc(count797F_Auto, total797F);
   const f797MaintCalc = calc(count797F_Maint, total797F);
 
-  const f794AutoCalc = calc(count794AC_Auto, total794AC);
-  const f794MaintCalc = calc(count794AC_Maint, total794AC);
+  const f793AutoCalc = calc(count793D_Auto, total793D);
+  const f793MaintCalc = calc(count793D_Maint, total793D);
+
+  const fPipaAutoCalc = calc(countPipa_Auto, totalPipa);
+  const fPipaMaintCalc = calc(countPipa_Maint, totalPipa);
+
+  const fRebAutoCalc = calc(countRebocador_Auto, totalRebocador);
+  const fRebMaintCalc = calc(countRebocador_Maint, totalRebocador);
 
   return {
     totalTrucks,
@@ -157,13 +195,38 @@ export function getFleetSummary(stopped = [], operating = [], appointments = [])
     numPerc797F_Auto: f797AutoCalc.num,
     numPerc797F_Maint: f797MaintCalc.num,
 
-    total794AC,
-    count794AC_Maint,
-    count794AC_Auto,
-    perc794AC_Auto: f794AutoCalc.text,
-    perc794AC_Maint: f794MaintCalc.text,
-    numPerc794AC_Auto: f794AutoCalc.num,
-    numPerc794AC_Maint: f794MaintCalc.num,
+    total793D,
+    count793D_Maint,
+    count793D_Auto,
+    perc793D_Auto: f793AutoCalc.text,
+    perc793D_Maint: f793MaintCalc.text,
+    numPerc793D_Auto: f793AutoCalc.num,
+    numPerc793D_Maint: f793MaintCalc.num,
+
+    totalPipa,
+    countPipa_Maint,
+    countPipa_Auto,
+    percPipa_Auto: fPipaAutoCalc.text,
+    percPipa_Maint: fPipaMaintCalc.text,
+    numPercPipa_Auto: fPipaAutoCalc.num,
+    numPercPipa_Maint: fPipaMaintCalc.num,
+
+    totalRebocador,
+    countRebocador_Maint,
+    countRebocador_Auto,
+    percRebocador_Auto: fRebAutoCalc.text,
+    percRebocador_Maint: fRebMaintCalc.text,
+    numPercRebocador_Auto: fRebAutoCalc.num,
+    numPercRebocador_Maint: fRebMaintCalc.num,
+
+    // Compatibilidade com referências antigas:
+    total794AC: 0,
+    count794AC_Maint: 0,
+    count794AC_Auto: 0,
+    perc794AC_Auto: '0%',
+    perc794AC_Maint: '0%',
+    numPerc794AC_Auto: 0,
+    numPerc794AC_Maint: 0,
   };
 }
 

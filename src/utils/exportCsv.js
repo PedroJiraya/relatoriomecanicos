@@ -1,4 +1,5 @@
-import { formatCA, getDelayTimes } from './formatters';
+import { formatAsset, getDelayTimes } from './formatters';
+import { getFleetInfo } from '../constants/fleetData';
 
 export function downloadCsv({
   date,
@@ -46,6 +47,7 @@ export function downloadCsv({
   rows.push([
     'Item',
     'Ativo',
+    'Série',
     'Código',
     'Horário Início Atendimento',
     'Horário Fim Atendimento',
@@ -65,6 +67,9 @@ export function downloadCsv({
   ]);
 
   appointments.forEach((item, idx) => {
+    const formattedAsset = formatAsset(item.asset) || 'Ativo não informado';
+    const serial = getFleetInfo(item.asset)?.serial || '';
+
     const effectiveStatus =
       item.endTime &&
       item.endTime.trim() &&
@@ -83,7 +88,8 @@ export function downloadCsv({
     if (delaysList.length === 0) {
       rows.push([
         String(idx + 1),
-        formatCA(item.asset) || 'Ativo não informado',
+        formattedAsset,
+        serial,
         item.code || '',
         item.startTime || '',
         item.endTime || '',
@@ -113,7 +119,8 @@ export function downloadCsv({
 
         rows.push([
           String(idx + 1),
-          formatCA(item.asset) || 'Ativo não informado',
+          formattedAsset,
+          serial,
           item.code || '',
           item.startTime || '',
           item.endTime || '',
@@ -141,17 +148,20 @@ export function downloadCsv({
   rows.push(['EQUIPAMENTOS PARADOS (DESCRIÇÃO EM MANUTENÇÃO)']);
   rows.push([
     'Ativo',
+    'Série',
     'Código',
     'Subcódigo / Evento',
     'Início da Parada',
-    'Motivo / Descrição',
+    'Motivo / Descrição (Preventiva MPS ou Falha)',
   ]);
   if (stoppedList.length === 0) {
     rows.push(['Nenhum equipamento parado informado']);
   } else {
     stoppedList.forEach((s) => {
+      const serial = getFleetInfo(s.asset)?.serial || '';
       rows.push([
-        formatCA(s.asset),
+        formatAsset(s.asset),
+        serial,
         s.code || '',
         s.subCode || 'EXEC MANUT',
         s.startTime || '',
@@ -178,7 +188,7 @@ export function downloadCsv({
   const link = document.createElement('a');
   link.href = url;
   const fileDate = date ? date.replace(/-/g, '') : 'turno';
-  link.setAttribute('download', `relatorio_turno_ahs_${fileDate}.csv`);
+  link.setAttribute('download', `relatorio_turno_mec_${fileDate}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

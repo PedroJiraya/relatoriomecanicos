@@ -4,7 +4,7 @@ export default function OperatingSection({ operating = [] }) {
   return (
     <section>
       <div className="section-title">
-        <h2>🚚 Equipamentos operando autônomo</h2>
+        <h2>🚚 Equipamentos operando</h2>
         <span
           className="auto-save-pill"
           style={{
@@ -13,13 +13,13 @@ export default function OperatingSection({ operating = [] }) {
             borderColor: '#c8e6c9',
           }}
         >
-          🟢 {operating.length} Caminhões Autônomo
+          🟢 {operating.length} Ativos em Operação
         </span>
       </div>
       <p className="hint">
-        Todos os 23 caminhões operam em modo autônomo por padrão. Ao incluir um
-        caminhão em <strong>Equipamentos parados</strong> ou em atendimento com
-        manutenção ativa, ele sai automaticamente da rota autônoma e passa para
+        Todos os 70 equipamentos da frota mecânica monitorada operam por padrão. Ao incluir um
+        equipamento em <strong>Equipamentos parados</strong> ou em atendimento com
+        manutenção ativa, ele sai automaticamente da operação e passa para o status de
         manutenção.
       </p>
       {operating.length > 0 ? (
@@ -33,8 +33,7 @@ export default function OperatingSection({ operating = [] }) {
         </div>
       ) : (
         <p style={{ color: '#888', fontStyle: 'italic', marginTop: '10px' }}>
-          Nenhum caminhão operando autônomo no momento (toda a frota está em
-          manutenção).
+          Nenhum equipamento operando no momento (toda a frota está em manutenção).
         </p>
       )}
     </section>
