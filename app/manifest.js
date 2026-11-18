@@ -1,0 +1,31 @@
+export default function manifest() {
+  return {
+    name: 'Relatório de Turno – Manutenção Mecânica',
+    short_name: 'Relatório Mec',
+    description: 'Relatório de turno de manutenção mecânica convencional Sotreq CAT',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#0f172a',
+    theme_color: '#ffcd00',
+    orientation: 'portrait-primary',
+    icons: [
+      {
+        src: '/icon-192.svg',
+        sizes: '192x192',
+        type: 'image/svg+xml',
+        purpose: 'any maskable',
+      },
+      {
+        src: '/icon-512.svg',
+        sizes: '512x512',
+        type: 'image/svg+xml',
+        purpose: 'any maskable',
+      },
+      {
+        src: '/logo-sotreq.png',
+        sizes: '612x154',
+        type: 'image/png',
+      },
+    ],
+  };
+}
